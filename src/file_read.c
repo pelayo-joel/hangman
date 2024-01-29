@@ -3,13 +3,14 @@
 #include <stdbool.h>
 #include <string.h>
 #include <ctype.h>
+#include <ncurses/ncurses.h>
 
 #include "../include/file_read.h"
 
-#define N_CATEGORIES 2
+#define N_CATEGORIES 3
 #define N_DIFFICULTIES 3
 
-char* validCategories[N_CATEGORIES] = {"fruits", "langages"};
+char* validCategories[N_CATEGORIES] = {"fruits", "langages", "sports"};
 char* validDifficulties[N_DIFFICULTIES] = {"facile\n", "moyen\n", "difficile\n"};
 
 
@@ -63,7 +64,7 @@ node file_words(char* filePath) {
             currentWord[column] = token;
             //If category or difficulty is invalid
             if ((column == 1 && valid_word(token, validCategories, N_CATEGORIES) == 1) || (column == 2 && valid_word(token, validDifficulties, N_DIFFICULTIES) == 1)) {
-                printf("Error on line %i: %s\n", nRow, token);
+                printw("\nError on line %i: %s", nRow, token);
                 parsingErrorFlag = 1;
                 break;
             }

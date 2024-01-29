@@ -1,5 +1,4 @@
 CC := gcc
-INC := ./include/
 SRC := ./src/*.c
 CFLAGS := -Wall -Wextra -Werror
 

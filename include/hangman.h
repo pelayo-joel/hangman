@@ -3,9 +3,8 @@
 
 #include "../include/file_read.h"
 
-#define WORDS 10
-#define WORDLEN 40
-#define CHANCE 6
+#define MAX_WORD_LENGTH 50
+#define MAX_TRIES 6
 
 
 
@@ -13,13 +12,11 @@
 
 // char* decrypt(char* code);
 
-void printBody(int mistakes, char* body);
-
-void printWord(char* guess, int len);
-
 void drawHangman(int tries);
 
 void drawWord(const char *word, const char *guessedLetters);
+
+void drawPressedCharacters(const char *pressedChar);
 
 int checkGuess(char guess, const char *word, char *guessedLetters);
 
