@@ -7,10 +7,10 @@
 
 #include "../include/file_read.h"
 
-#define N_CATEGORIES 3
+#define N_CATEGORIES 4
 #define N_DIFFICULTIES 3
 
-char* validCategories[N_CATEGORIES] = {"fruits", "langages", "sports"};
+char* validCategories[N_CATEGORIES] = {"fruits", "langages", "sports", "animaux"};
 char* validDifficulties[N_DIFFICULTIES] = {"facile\n", "moyen\n", "difficile\n"};
 
 

@@ -12,19 +12,18 @@
 
 
 
-bool srand_called = false;
 char* dictionnary = NULL;
 char* category = NULL; 
 char* difficulty = NULL;
 char* wordToGuess = NULL;
 char* wordCategory = NULL;
-int random;
 
 
 
 int main(int argc, char* argv[]) {
     initscr();
 	clear();
+
 	//Parses the cmd arguments
 	if (argc == 4) {
 		dictionnary = argv[1];
@@ -46,27 +45,10 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	//Retrieves the words from the dictionnary depending on the given args as a linked list and chooses a random word in the list
-	printw("Reading from %s...", dictionnary);
-	node possibleWords = matching_words(dictionnary, category, difficulty);
-	wordToGuess = malloc(sizeof(char) * 32);
-	wordCategory = malloc(sizeof(char) * 32);
+    //Retrieves corresponding word
+	GetWord();
 
-	srand(time(NULL));
-	random = rand() % listLen(possibleWords);
-
-	int i = 0;
-	while (possibleWords) {
-		if (i == random) {
-			strcpy(wordToGuess, possibleWords->wordData[0]);
-			strcpy(wordCategory, possibleWords->wordData[1]);
-		}
-		destroy(possibleWords);
-		possibleWords = possibleWords->next;
-		i++;
-	}
-	getch();
-
+    //Game start
     char guessedLetters[MAX_WORD_LENGTH];
     int tries = 0;
 
@@ -130,6 +112,31 @@ int main(int argc, char* argv[]) {
     endwin();
 
     return 0;
+}
+
+
+
+//Retrieves the words from the dictionnary depending on the given args as a linked list and chooses a random word in the list
+void GetWord() {
+    printw("Reading from %s...", dictionnary);
+	node possibleWords = matching_words(dictionnary, category, difficulty);
+	wordToGuess = malloc(sizeof(char) * 32);
+	wordCategory = malloc(sizeof(char) * 32);
+
+	srand(time(NULL));
+	int random = rand() % listLen(possibleWords);
+
+	int i = 0;
+	while (possibleWords) {
+		if (i == random) {
+			strcpy(wordToGuess, possibleWords->wordData[0]);
+			strcpy(wordCategory, possibleWords->wordData[1]);
+		}
+		destroy(possibleWords);
+		possibleWords = possibleWords->next;
+		i++;
+	}
+	getch();
 }
 
 void drawHangman(int tries) {
@@ -198,15 +205,10 @@ void drawWord(const char *word, const char *guessedLetters) {
 }
 
 void drawPressedCharacters(const char *pressedChar) {
-    // Display the word with correctly guessed letters
-    mvprintw(19, 10, "Pressed letters: ");
+    // Display pressed characters
+    mvprintw(13, 10, "Pressed letters: ");
     for (int i = 0; i < MAX_TRIES; ++i) {
-        mvprintw(19, 28 + i * 2, "%c", pressedChar[i]);
-        // if (guessedLetters[i] == 1 || pressedChar[i] == ' ') {
-        //     mvprintw(19, 15 + i * 2, "%c", pressedChar[i]);
-        // } else {
-        //     mvprintw(19, 15 + i * 2, "_");
-        // }
+        mvprintw(13, 28 + i * 2, "%c", pressedChar[i]);
     }
 
     refresh();

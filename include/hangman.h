@@ -12,6 +12,8 @@
 
 // char* decrypt(char* code);
 
+void GetWord();
+
 void drawHangman(int tries);
 
 void drawWord(const char *word, const char *guessedLetters);
