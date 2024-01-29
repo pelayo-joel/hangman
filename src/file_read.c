@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
 #include "../include/file_read.h"
 
+#define N_CATEGORIES 2
+#define N_DIFFICULTIES 3
 
-#define MAXCHAR 1024
-
+char* validCategories[N_CATEGORIES] = {"fruits", "langages"};
+char* validDifficulties[N_DIFFICULTIES] = {"facile\n", "moyen\n", "difficile\n"};
 
 
 //Retrieves all words that matches what args has been given by the user
@@ -15,29 +18,21 @@ node matching_words(char* filePath, char* category, char* difficulty) {
     node allWords = file_words(filePath);
 
     //If no args has been given
-    if (!strcmp(category, "all") && !strcmp(difficulty, "all"))
-    {
+    if (!strcmp(category, "all") && !strcmp(difficulty, "all")) {
         return allWords;
     }
     node startPtr = NULL;
     node currentWord = allWords;
 
     //Traverse all retrieved word from the file
-    while (currentWord && currentWord->next != NULL)
-    {
-        //If matches both arguments
-        if (strcmp(currentWord->wordData[1], category) == 0 && strcmp(currentWord->wordData[2], difficulty) == 0)
-        {
+    while (currentWord && currentWord->next != NULL) {
+        //If matches both arguments or only two args has been given and match on diffculty
+        if ((strcmp(currentWord->wordData[1], category) == 0 && strcmp(currentWord->wordData[2], difficulty) == 0) || (strcmp(category, "all") == 0 && strcmp(currentWord->wordData[2], difficulty) == 0)) {
             startPtr = add_word(startPtr, currentWord->wordData);
         }
-        // If only two args has been given and match on diffculty
-        else if (strcmp(category, "all") == 0 && strcmp(currentWord->wordData[2], difficulty) == 0)
-        {
-            startPtr = add_word(startPtr, currentWord->wordData);
-        }
-        
         currentWord = currentWord->next;
     }
+    destroy(allWords);
     return startPtr;
 }
 
@@ -53,8 +48,7 @@ node file_words(char* filePath) {
 
     //Traverse the file row by row
     int nRow = 0;
-    while (fgets(row, MAXCHAR, file))
-    {
+    while (fgets(row, MAXCHAR, file)) {
         int parsingErrorFlag = 0;
         int column = 0;
         char* currentWord[3];
@@ -64,12 +58,11 @@ node file_words(char* filePath) {
         if (token[0] == '#') continue;
 
         //Traverse the row
-        while (token)
-        {
+        while (token) {
+            
             currentWord[column] = token;
-            //If word in file is incorrect
-            if ((column == 1 && strcmp(token, "fruits") != 0 && strcmp(token, "langages") != 0) || (column == 2 && strcmp(token, "facile\n") != 0 && strcmp(token, "moyen\n") != 0 && strcmp(token, "difficile\n") != 0))
-            {
+            //If category or difficulty is invalid
+            if ((column == 1 && valid_word(token, validCategories, N_CATEGORIES) == 1) || (column == 2 && valid_word(token, validDifficulties, N_DIFFICULTIES) == 1)) {
                 printf("Error on line %i: %s\n", nRow, token);
                 parsingErrorFlag = 1;
                 break;
@@ -110,14 +103,42 @@ node add_word(node listStart, char** wordData) {
     if (listStart == NULL) {
         listStart = newWord;
     }
-    // Traverse the list until we reach the end then adds it to the tail of the list
+    // Else, traverse the list until we reach the tail then adds the newly created word at it
     else {
         node lastWord = listStart;
-        while (lastWord->next != NULL)
-        {
+        while (lastWord->next != NULL) {
             lastWord = lastWord->next;
         }
         lastWord->next = newWord;
     }
     return listStart;
+}
+
+//Checks if word properties are valid (valid category/difficulty and only alphabetic char)
+int valid_word(char* wordProperty, char** validProperties, int nProp) {
+    int invalidFlag = 0;
+    for (int i = 0; i < nProp; i++){
+        if (strcmp(wordProperty, validProperties[i]) == 0) {
+            invalidFlag = 1;
+        }   
+    }
+    if (invalidFlag == 0) return 1;
+
+    for (int i = 0; wordProperty[i] < '\0'; i++) {
+        if (wordProperty[i] == '-') {
+            continue;
+        }
+        else if (!isalpha(wordProperty[i]) || !isalpha(wordProperty[i])) {
+            return 1;
+        }   
+    }
+    
+    return 0;
+}
+
+void destroy(node listStart) {
+	free(listStart->wordData[0]);
+	free(listStart->wordData[1]);
+	free(listStart->wordData[2]);
+	free(listStart);
 }

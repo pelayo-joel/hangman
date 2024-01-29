@@ -3,22 +3,30 @@
 #include <stdbool.h>
 #include <time.h>
 #include <string.h>
+#include <ctype.h>
+#include <ncurses/ncurses.h>
+
 
 #include "../include/hangman.h"
 #include "../include/file_read.h"
 
 
+#define MAX_WORD_LENGTH 50
+#define MAX_TRIES 6
 
 bool srand_called = false;
 char* dictionnary = NULL;
 char* category = NULL; 
 char* difficulty = NULL;
 char* wordToGuess = NULL;
+char* wordCategory = NULL;
+char* wordDifficulty = NULL;
 int random;
 
 
 
 int main(int argc, char* argv[]) {
+	clear();
 	//Parses the cmd arguments
 	if (argc == 4) {
 		dictionnary = argv[1];
@@ -35,193 +43,188 @@ int main(int argc, char* argv[]) {
 		category = "all";
 		difficulty = "all";
 	}
-	else
-	{
+	else {
 		printf("Invalid use of arguments\n");
 		return 1;
 	}
 
 	//Retrieves the words from the dictionnary depending on the given args as a linked list and chooses a random word in the list
-	srand(time(NULL));
+	printf("Reading from %s...", dictionnary);
 	node possibleWords = matching_words(dictionnary, category, difficulty);
 	wordToGuess = malloc(sizeof(char) * 32);
+	wordCategory = malloc(sizeof(char) * 32);
+	wordDifficulty = malloc(sizeof(char) * 32);
+
+	srand(time(NULL));
 	random = rand() % listLen(possibleWords);
 
 	int i = 0;
-	while (possibleWords)
-	{
-		if (i == random) strcpy(wordToGuess, possibleWords->wordData[0]);
-		
+	while (possibleWords) {
+		if (i == random) {
+			strcpy(wordToGuess, possibleWords->wordData[0]);
+			strcpy(wordCategory, possibleWords->wordData[1]);
+			strcpy(wordDifficulty, possibleWords->wordData[2]);
+		}
 		destroy(possibleWords);
 		possibleWords = possibleWords->next;
 		i++;
 	}
-	printf("Chosen word: %s\n", wordToGuess);
+	getch();
 
+    char guessedLetters[MAX_WORD_LENGTH];
+    int tries = 0;
 
+    // Initialize ncurses
+    initscr();
+	getch();
+    raw();
+    keypad(stdscr, TRUE);
+    noecho();
+    clear();
 
-	return 0;
+    // Convert the word to uppercase
+    for (size_t i = 0; i < strlen(wordToGuess); ++i) {
+        wordToGuess[i] = toupper(wordToGuess[i]);
+    }
 
+    // Initialize guessed letters
+    memset(guessedLetters, 0, sizeof(guessedLetters));
 
-	//Game logic and interface
+    // Main game loop
+    while (!isGameOver(wordToGuess, guessedLetters)) {
+        clear();
 
-	// do
-	// {
-	// 	/* code */
-	// } while (0);
-	
-	//free(possibleWords);
+        // Draw hangman and word
+        drawHangman(tries);
+        drawWord(wordToGuess, guessedLetters);
 
+        // Get a guess from the player
+        printw("\tEnter a letter guess: ");
+        refresh();
+        char guess;
+        scanw(" %c", &guess);
 
-	// printf("\n\t Be aware you can be hanged!!.");
+        // Convert the guess to uppercase
+        guess = toupper(guess);
 
-	// printf("\n\n\t Rules : ");
-	// printf("\n\t - Maximum 6 mistakes are allowed.");
-	// printf("\n\t - All alphabet are in lower case.");
-	// printf("\n\t - All words are name of very popular Websites. eg. Google");
-	// printf("\n\t - If you enjoy continue, otherwise close it.");
+        // Check the guess
+        if (!checkGuess(guess, wordToGuess, guessedLetters)) {
+            tries++;
+        }
+    }
 
-	// printf("\n\t Syntax : Alphabet");
-	// printf("\n\t Example : a \n\n");
+    // Display the final result
+    clear();
+    drawHangman(tries);
+    drawWord(wordToGuess, guessedLetters);
 
-	// char values[WORDS][WORDLEN] = {"N~mqOlJ^tZletXodeYgs","gCnDIfFQe^CdP^^B{hZpeLA^hv","7urtrtwQv{dt`>^}FaR]i]XUug^GI",
-	// 								"aSwfXsxOsWAlXScVQmjAWJG","cruD=idduvUdr=gmcauCmg]","BQt`zncypFVjvIaTl]u=_?Aa}F",
-	// 								"iLvkKdT`yu~mWj[^gcO|","jSiLyzJ=vPmnv^`N]^>ViAC^z_","xo|RqqhO|nNstjmzfiuoiFfhwtdh~",
-	// 								"OHkttvxdp|[nnW]Drgaomdq"};
-	// char *body = malloc(CHANCE+1);
+    if (tries >= MAX_TRIES) {
+        printw("\tYou lose! The word was: %s\n", wordToGuess);
+    } else {
+        printw("\tCongratulations! You guessed the word: %s\n", wordToGuess);
+    }
 
-	// int id = i_rnd(WORDS);
-	// char *word = decrypt(values[id]);
-	// int len = strlen(word);
-	// char *guessed = malloc(len);
-	// char falseWord[CHANCE];
+    refresh();
+    getch();
 
-	// memset(body, ' ', CHANCE+1);
-	// memset(guessed, '_', len);
-	// char guess;
-	// bool found;
-	// char* win;
+    // End ncurses
+    endwin();
 
-	// int mistakes = 0;
-	// setvbuf(stdin, NULL, _IONBF, 0);
-
-	// do {
-
-	// 	found = false;
-	// 	printf("\n\n");
-	// 	printBody(mistakes, body);
-	// 	printf("\n\n");
-	// 	printf("\tFalse Letters : ");
-	// 	if(mistakes == 0) printf("None\n");
-	// 	for (int i = 0; i < mistakes; ++i)
-	// 	{
-	// 		printf("%c", falseWord[i]);
-	// 	}
-	// 	printf("\n\n");
-	// 	printWord(guessed, len);
-	// 	printf("\tGive me a alphabet in lower case : ");
-	// 	do {scanf("%c",&guess);} while ( getchar() != '\n' );
-	// 	for (int i = 0; i < len; ++i)
-	// 	{
-	// 		if(word[i] == guess) {
-	// 			found = true;
-	// 			guessed[i] = guess;
-	// 		}	
-	// 	}
-	// 	if(!found) {
-	// 		falseWord[mistakes] = guess;
-	// 		mistakes += 1;
-	// 	}
-	// 	win = strchr(guessed, '_');
-	// }while(mistakes < CHANCE && win != NULL);
-
-	// if(win == NULL) {
-	// 	printf("\n");
-	// 	printWord(guessed, len);
-	// 	printf("\n\tCongrats! You have won : %s\n\n", word);
-	// } else {
-	// 	printf("\n");
-	// 	printBody(mistakes, body);
-	// 	printf("\n\n\tBetter try next time. Word was %s\n\n", word);
-	// }
-
-	// free(body);
-	// free(word);
-	// free(guessed);
-	// return EXIT_SUCCESS;
+    return 0;
 }
 
+void drawHangman(int tries) {
+    // Draw hangman based on the number of incorrect guesses
+    mvprintw(2, 10, "+----+");
+    mvprintw(3, 10, "|    |");
+    mvprintw(4, 10, "|");
+    mvprintw(5, 10, "|");
+    mvprintw(6, 10, "|");
+    mvprintw(7, 10, "|");
+    mvprintw(8, 10, "+");
 
+    switch (tries) {
+        case 1:
+            mvprintw(4, 12, "   O");
+            break;
+        case 2:
+			mvprintw(4, 12, "   O");
+            mvprintw(5, 12, "   |");
+            break;
+        case 3:
+			mvprintw(4, 12, "   O");
+            mvprintw(5, 12, "   |");
+            mvprintw(5, 11, "   /");
+            break;
+        case 4:
+			mvprintw(4, 12, "   O");
+            mvprintw(5, 12, "   |");
+            mvprintw(5, 11, "   /");
+            mvprintw(5, 13, "   \\");
+            break;
+        case 5:
+			mvprintw(4, 12, "   O");
+            mvprintw(5, 12, "   |");
+            mvprintw(5, 11, "   /");
+            mvprintw(5, 13, "   \\");
+            mvprintw(6, 11, "   /");
+            break;
+        case 6:
+			mvprintw(4, 12, "   O");
+            mvprintw(5, 12, "   |");
+            mvprintw(5, 11, "   /");
+            mvprintw(5, 13, "   \\");
+            mvprintw(6, 11, "   /");
+            mvprintw(6, 13, "   \\");
+            break;
+        default:
+            break;
+    }
 
-
-
-// int i_rnd(int i) {
-//     if (!srand_called) {
-//         srand(time(NULL) << 10);
-//         srand_called = true;
-//     }
-//     return rand() % i;
-// }
-
-// char* decrypt(char* code) {
-// 	int hash = ((strlen(code) - 3) / 3) + 2;
-// 	char* decrypt = malloc(hash);
-// 	char* toFree = decrypt;
-// 	char* word = code;
-// 	for (int ch = *code; ch != '\0'; ch = *(++code))
-// 	{
-// 		if((code - word + 2) % 3  == 1){
-// 			*(decrypt++) = ch - (word - code + 1) - hash;
-// 		}
-// 	}
-// 	*decrypt = '\0';
-// 	return toFree;
-// }
-
-void printBody(int mistakes, char* body) {
-	printf("\tMistakes :%d\n", mistakes);
-	switch(mistakes) {
-
-		case 6: body[6] = '\\'; break;
-		case 5: body[5] = '/'; break;
-		case 4: body[4] = '\\'; break;
-		case 3: body[3] = '|'; break;
-		case 2: body[2] = '/'; break;
-		case 1: body[1] = ')', body[0] = '('; break;
-		default: break;
-
-	}
-
-	printf("\t _________\n"
-	       "\t|         |\n"
-	       "\t|        %c %c\n"
-	       "\t|        %c%c%c\n"
-	       "\t|        %c %c\n"
-	       "\t|             \n"
-	       "\t|_________________", body[0], body[1], body[2],
-	       body[3], body[4], body[5], body[6]);
+    refresh();
 }
 
-void printWord(char* guess, int len) {
-	printf("\t");
-	for (int i = 0; i < len; ++i)
-	{
-		printf("%c ", guess[i]);
-	}
-	printf("\n\n");
+void drawWord(const char *word, const char *guessedLetters) {
+    // Display the word with correctly guessed letters
+    mvprintw(12, 10, "Word: ");
+    for (size_t i = 0; i < strlen(word); ++i) {
+        if (guessedLetters[i] == 1 || word[i] == ' ') {
+            mvprintw(12, 15 + i * 2, "%c", word[i]);
+        } else {
+            mvprintw(12, 15 + i * 2, "_");
+        }
+    }
+
+    refresh();
 }
 
-void destroy(node currentWord) {
-	free(currentWord->wordData[0]);
-	free(currentWord->wordData[1]);
-	free(currentWord->wordData[2]);
-	free(currentWord);
+int checkGuess(char guess, const char *word, char *guessedLetters) {
+    // Check if the guessed letter is in the word
+    int correct = 0;
+    for (size_t i = 0; i < strlen(word); ++i) {
+        if (word[i] == guess) {
+            guessedLetters[i] = 1;
+            correct = 1;
+        }
+    }
+
+    return correct;
+}
+
+int isGameOver(const char *word, const char *guessedLetters) {
+    // Check if the game is over (all letters guessed or maximum tries reached)
+    for (size_t i = 0; i < strlen(word); ++i) {
+        if (!guessedLetters[i] && word[i] != ' ') {
+            return 0; // Game is not over
+        }
+    }
+
+    return 1; // Game is over
 }
 
 int listLen(node listHead) {
 	int len = 0;
-	while (listHead)
-	{
+	while (listHead) {
 		listHead = listHead->next;
 		len++;
 	}

@@ -17,7 +17,13 @@ void printBody(int mistakes, char* body);
 
 void printWord(char* guess, int len);
 
-void destroy(node currentWord);
+void drawHangman(int tries);
+
+void drawWord(const char *word, const char *guessedLetters);
+
+int checkGuess(char guess, const char *word, char *guessedLetters);
+
+int isGameOver(const char *word, const char *guessedLetters);
 
 int listLen(node listHead);
 

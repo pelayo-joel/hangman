@@ -1,14 +1,16 @@
 CC := gcc
-INC := include/
-SRC := src/*.c
-CFLAGS := -Wall -Werror -Wextra
+INC := ./include/
+SRC := ./src/*.c
+CFLAGS := -Wall -Wextra -Werror
 
+ifeq ($(OS), Windows_NT)
+    LDFLAGS += -lncursesw
+else
+    LDFLAGS += -lncurses
+endif
 
 all:
-	$(CC) -o hangman $(SRC) $(CFLAGS)
-
-# hangman.exe:
-# 	$(CC) -o hangman $(SRC) $(CFLAGS)
+	$(CC) $(CFLAGS) $(SRC) -o hangman $(LDFLAGS) -DNCURSES_STATIC 
 
 
 .PHONY: all clean fclean run
